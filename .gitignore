@@ -1,0 +1,19 @@
+# Ignorar os ficheiros de configuracións sensibles
+.env                   # Ficheiro que contén variables de entorno sensibles
+*.sql                  # Base de datos exportada (por exemplo, dumps SQL)
+*.tar.gz               # Arquivos comprimidos (se usas arquivos de backup ou dumps comprimidos)
+*.bak                  # Arquivos de backup
+*.swp                  # Ficheiros temporais creados por editores como Vim
+
+# Ignorar o contedor Docker (imaxes e volumes)
+docker-compose.override.yml # Se usas un ficheiro de sobrecarga (non é necesario no teu caso, pero se se usa, ignórase)
+*.log                   # Ignorar logs de contedores
+*.pid                   # Ficheiros de identificación de procesos
+
+# Ignorar directorios que contén datos persistentes, volúmenes ou caches locais
+/volumes                # Directorios de volumes do contedor
+*.tgz                   # Arquivos comprimidos do contedor
+
+# Ignorar directorios específicos de contedores
+/node_modules           # Se usas Node.js ou frontend que instale dependencias no directorio node_modules
+/venv                   # Se usas un contedor ou entorno Python, ignora directorios virtuais
