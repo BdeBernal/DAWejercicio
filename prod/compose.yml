@@ -1,11 +1,17 @@
-version: '3.8'
-
 services:
-  basededatos:
-    image: mariadb
-    env_file:
-      - .env
-    volumes:
-      - datos:/var/lib/mysql
+
+  web:
+    build: apache
+    hostname: web
+    ports:
+      - 8000:80
+      - 443:443
     networks:
-      - rede_test
+      rede_test:
+        aliases:
+          - a23bernalrc.ddnsfree.com
+          - www.a23bernalrc.ddnsfree.com
+    volumes:
+      - ./app:/app
+      - ./apache/drupal.conf:/etc/apache2/sites-enabled/drupal.conf
+      - ./certs:/certs
