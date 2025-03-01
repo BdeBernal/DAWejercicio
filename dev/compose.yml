@@ -1,44 +1,41 @@
-version: '3.8'
-
 services:
+
   web:
-    build: .
-    container_name: dev_web
+    build: apache
+    hostname: web
     ports:
-      - "${WEB_PORT}:80"
+      - 8000:80
+      - 443:443
+    networks:
+      rede_test:
+        aliases:
+          - a23bernalrc.ddnsfree.com
+          - www.a23bernalrc.ddnsfree.com
     volumes:
-      - ./html:/var/www/html
-      - ./certs:/etc/ssl/certs
-    depends_on:
-      - db
+      - ./app:/app
+      - ./apache/drupal.conf:/etc/apache2/sites-enabled/drupal.conf
+      - ./certs:/certs
+
+  basededatos:
+    image: mariadb
     env_file:
       - .env
-
-  db:
-    image: mysql:8.0
-    container_name: dev_db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "${DB_PORT}:3306"
     volumes:
-      - db_data:/var/lib/mysql
+      - datos:/var/lib/mysql
+    networks:
+      - rede_test
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: dev_phpmyadmin
+    image: phpmyadmin
+    networks:
+      - rede_test
     restart: always
-    depends_on:
-      - db
-    environment:
-      PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
-      - "${PHPMYADMIN_PORT}:80"
+      - 8080:80
+    environment:
+      - PMA_HOST=basededatos
 
+networks:
+  rede_test:
 volumes:
-  db_data:
+  datos:

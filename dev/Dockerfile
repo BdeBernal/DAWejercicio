@@ -1,48 +1,44 @@
 FROM debian:12
 
-# Configuración do entorno
-ENV DEBIAN_FRONTEND=noninteractive
+# Actualizar paquetes e instalar utilidades básicas
+RUN apt update && apt -y install wget curl sudo lsb-release apt-transport-https ca-certificates \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar Apache, PHP e as extensións necesarias
-RUN apt-get update && apt-get install -y \
-    apache2 \
-    php \
-    php-mysqli \
-    libapache2-mod-php \
-    curl \
-    vim \
+# Instalar Apache e PHP 8.1 con todos os módulos necesarios
+RUN apt update && apt install -y apache2 php8.1 php8.1-mysql \
+    php8.1-xml \
+    php8.1-gd \
+    php8.1-curl \
+    php8.1-mbstring \
+    php8.1-zip \
+    php8.1-intl \
+    php8.1-bcmath \
+    php8.1-opcache \
+    php8.1-soap \
+    php8.1-pdo \
+    php8.1-pdo-mysql \
+    php8.1-json \
+    php8.1-simplexml \
     git \
     unzip \
-    openssl && apt-get clean && rm -rf /var/lib/apt/lists/*
+    libnss3-tools \
+    xdg-utils \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Habilitar Apache
-RUN echo "<?php phpinfo(); ?>" > /var/www/html/index.php
+# Habilitar módulos de Apache necesarios
+RUN a2enmod rewrite headers ssl
 
-# Habilitar modulos SSL en Apache
-RUN a2enmod ssl
+# Configurar Apache para PrestaShop
+COPY prestashop.conf /etc/apache2/sites-available/prestashop.conf
+RUN a2dissite 000-default.conf && a2ensite prestashop.conf
 
-# Copiar los certificados SSL al contenedor (suponiendo que están en ./certs)
-COPY ./certs/sitio.pem /etc/ssl/certs/sitio.pem
-COPY ./certs/sitio.key /etc/ssl/private/sitio.key
-
-# Crear un archivo de configuración para habilitar SSL en Apache
-RUN echo '<VirtualHost *:443>' > /etc/apache2/sites-available/default-ssl.conf && \
-    echo '    DocumentRoot /var/www/html' >> /etc/apache2/sites-available/default-ssl.conf && \
-    echo '    ServerName localhost' >> /etc/apache2/sites-available/default-ssl.conf && \
-    echo '    SSLEngine on' >> /etc/apache2/sites-available/default-ssl.conf && \
-    echo '    SSLCertificateFile /etc/ssl/certs/sitio.pem' >> /etc/apache2/sites-available/default-ssl.conf && \
-    echo '    SSLCertificateKeyFile /etc/ssl/private/sitio.key' >> /etc/apache2/sites-available/default-ssl.conf && \
-    echo '    SSLProtocol all -SSLv2 -SSLv3' >> /etc/apache2/sites-available/default-ssl.conf && \
-    echo '    SSLCipherSuite HIGH:!aNULL:!MD5' >> /etc/apache2/sites-available/default-ssl.conf && \
-    echo '</VirtualHost>' >> /etc/apache2/sites-available/default-ssl.conf
-
-# Habilitar el sitio SSL y reiniciar Apache
-RUN a2ensite default-ssl.conf && \
-    service apache2 restart
+# Definir o directorio de traballo
+WORKDIR /var/www/html
 
 # Expor os portos 80 e 443
-EXPOSE 80
-EXPOSE 443
+EXPOSE 80 443
 
-# Comando por defecto para ejecutar Apache en primer plano
+# Iniciar Apache
 CMD ["apachectl", "-D", "FOREGROUND"]
